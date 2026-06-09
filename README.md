@@ -1,6 +1,10 @@
 # netbird-aviary 🪺
 
-A Traefik-style controller for **NetBird Services**. Watches the Docker socket for container labels and reconciles them into reverse-proxy Services on a self-hosted NetBird (v0.72.x) management server — optionally embedding a netbird agent and registering itself as a routing peer so your services don't need to publish host ports at all.
+[![CI](https://github.com/ankycooper/netbird-aviary/actions/workflows/ci.yml/badge.svg)](https://github.com/ankycooper/netbird-aviary/actions/workflows/ci.yml)
+[![Build & publish](https://github.com/ankycooper/netbird-aviary/actions/workflows/build.yml/badge.svg)](https://github.com/ankycooper/netbird-aviary/actions/workflows/build.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+Declarative **NetBird Services** from Docker labels. Watches the Docker socket and reconciles labeled containers into reverse-proxy Services on a self-hosted NetBird (v0.72.x) management server — optionally embedding a netbird agent and registering itself as a routing peer so your services don't need to publish host ports at all.
 
 ```
         docker labels                 NetBird API
@@ -22,7 +26,7 @@ container────────────►  aviary  ───────�
 
 ## Quick start
 
-The image is published to `ghcr.io/ankycooper/netbird-aviary`.
+The image is published to `ghcr.io/ankycooper/netbird-aviary` — multi-arch (`linux/amd64`, `linux/arm64`), so it runs on x86, Apple Silicon, and Raspberry Pi.
 
 ```sh
 # 1. Get the sample compose + env
@@ -64,6 +68,7 @@ Env vars on the `aviary` container. Required ones in **bold**.
 | `NETBIRD_NETWORK_NAME` | Name aviary uses for the NetBird Network it auto-creates (default: docker network name). |
 | `NETBIRD_DOCKER_NETWORK` | Which docker network to use if aviary is attached to several. Auto-detected if only one user-defined network. |
 | `NETBIRD_PEER_HOSTNAME` | Hostname the embedded agent registers as (default: `aviary-<docker-network>`). |
+| `NETBIRD_AGENT_MANAGEMENT_URL` | Override the management URL the embedded agent connects to (defaults to `NETBIRD_API_URL`). Useful when the controller talks to NetBird over an internal address but the agent should use a public one. |
 | `NETBIRD_DISABLE_AGENT` | `true` to skip starting the embedded agent — for users who already run a netbird peer on the docker network. |
 | `LABEL_PREFIX` | `netbird` by default. |
 | `RECONCILE_INTERVAL` | Periodic resync. `5m` default. |
@@ -223,3 +228,7 @@ docker build -t netbird-aviary:dev .
 ```
 
 Or wire a local build into your compose by setting `build: .` on the `aviary` service.
+
+## License
+
+[MIT](LICENSE). NetBird itself is BSD-3-Clause; this project is independent of and not affiliated with NetBird GmbH.
