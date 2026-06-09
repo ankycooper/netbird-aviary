@@ -13,15 +13,18 @@ RUN go mod tidy && \
 FROM alpine:3.20 AS netbird
 ARG NETBIRD_VERSION=0.72.2
 ARG TARGETARCH
+ARG TARGETVARIANT
 RUN apk add --no-cache wget tar ca-certificates && \
     case "${TARGETARCH}" in \
-      amd64)  NB_ARCH=x86_64 ;; \
+      amd64)  NB_ARCH=amd64 ;; \
       arm64)  NB_ARCH=arm64 ;; \
-      arm)    NB_ARCH=armv6 ;; \
-      *)      echo "unsupported arch ${TARGETARCH}" && exit 1 ;; \
+      386)    NB_ARCH=386 ;; \
+      arm)    NB_ARCH="armv${TARGETVARIANT#v}"; [ "${NB_ARCH}" = "armv" ] && NB_ARCH=armv6 ;; \
+      *)      echo "unsupported arch: ${TARGETARCH}" && exit 1 ;; \
     esac && \
-    wget -qO /tmp/netbird.tar.gz \
-      "https://github.com/netbirdio/netbird/releases/download/v${NETBIRD_VERSION}/netbird_${NETBIRD_VERSION}_linux_${NB_ARCH}.tar.gz" && \
+    URL="https://github.com/netbirdio/netbird/releases/download/v${NETBIRD_VERSION}/netbird_${NETBIRD_VERSION}_linux_${NB_ARCH}.tar.gz" && \
+    echo "Downloading ${URL}" && \
+    wget -qO /tmp/netbird.tar.gz "${URL}" && \
     tar -xzf /tmp/netbird.tar.gz -C /usr/local/bin netbird && \
     chmod +x /usr/local/bin/netbird
 
