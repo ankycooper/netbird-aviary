@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: vet + test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.mod   # no external deps yet → cache against go.mod hash
+
+      - name: Resolve deps
+        run: go mod tidy
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: go test
+        run: go test -race -timeout=60s ./...
+
+      - name: Smoke-build the controller binary
+        # Make sure the binary compiles for linux/amd64 even when no tests exist yet.
+        run: CGO_ENABLED=0 GOOS=linux go build -trimpath -o /tmp/aviary ./

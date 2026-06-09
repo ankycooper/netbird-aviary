@@ -1,0 +1,7 @@
+# Local secrets and per-host config — never commit these.
+.env
+docker-compose.yml
+docker-compose.override.yml
+
+# Claude Code session/settings
+.claude/
