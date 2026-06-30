@@ -30,10 +30,21 @@ RUN apk add --no-cache wget tar ca-certificates && \
 
 FROM alpine:3.20
 LABEL org.opencontainers.image.title="netbird-aviary"
-LABEL org.opencontainers.image.description="Traefik-style controller for NetBird Services driven by Docker labels"
+LABEL org.opencontainers.image.description="Declarative NetBird Services from Docker labels with an optional embedded routing peer"
 LABEL org.opencontainers.image.source="https://github.com/ankycooper/netbird-aviary"
 LABEL org.opencontainers.image.licenses="MIT"
-RUN apk add --no-cache ca-certificates iptables ip6tables openresolv && \
+RUN apk add --no-cache \
+        ca-certificates \
+        iptables ip6tables \
+        ipset \
+        openresolv && \
+    # Force iptables to use the nft backend. Required on hosts whose kernel
+    # only exposes nftables (e.g. Docker Desktop on macOS); harmless on Linux
+    # hosts where iptables-nft is already the modern default. Without this,
+    # bare `iptables` resolves to a missing target and the netbird agent
+    # silently fails to install routing/NAT rules.
+    ln -sf /sbin/iptables-nft /sbin/iptables && \
+    ln -sf /sbin/ip6tables-nft /sbin/ip6tables && \
     mkdir -p /var/lib/netbird
 COPY --from=netbird /usr/local/bin/netbird /usr/local/bin/netbird
 COPY --from=build /out/controller /controller
