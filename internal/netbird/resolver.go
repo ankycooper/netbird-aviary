@@ -183,38 +183,39 @@ func (r *Resolver) ClusterID(ctx context.Context, nameOrID string) (string, erro
 	return "", fmt.Errorf("no proxy cluster named or addressed %q", nameOrID)
 }
 
-// GroupIDs resolves a slice of group names/ids to group IDs. Unresolved
-// names cause an error listing every one that failed.
-func (r *Resolver) GroupIDs(ctx context.Context, namesOrIDs []string) ([]string, error) {
+// GroupIDs resolves a slice of group names/ids to group IDs. Returns the
+// resolved IDs and a slice of names that couldn't be resolved (so the caller
+// can warn the user). It only returns an error if the API itself failed —
+// missing groups are not an error so a single typo doesn't take a service
+// off the air entirely. If NO names resolve and at least one was attempted,
+// the resolved slice will be empty and the missing slice will contain
+// everything; the caller decides whether to proceed.
+func (r *Resolver) GroupIDs(ctx context.Context, namesOrIDs []string) (resolved, missing []string, err error) {
 	if len(namesOrIDs) == 0 {
-		return nil, nil
+		return nil, nil, nil
 	}
 	r.mu.Lock()
 	if !r.loaded.groups {
 		r.mu.Unlock()
 		if err := r.loadGroups(ctx); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		r.mu.Lock()
 	}
-	out := make([]string, 0, len(namesOrIDs))
-	var missing []string
+	defer r.mu.Unlock()
+	resolved = make([]string, 0, len(namesOrIDs))
 	for _, n := range namesOrIDs {
 		if LooksLikeID(n) {
-			out = append(out, n)
+			resolved = append(resolved, n)
 			continue
 		}
 		if id, ok := r.groups[strings.ToLower(n)]; ok {
-			out = append(out, id)
+			resolved = append(resolved, id)
 		} else {
 			missing = append(missing, n)
 		}
 	}
-	r.mu.Unlock()
-	if len(missing) > 0 {
-		return nil, fmt.Errorf("no NetBird groups found for: %s", strings.Join(missing, ", "))
-	}
-	return out, nil
+	return resolved, missing, nil
 }
 
 // --- loaders ---

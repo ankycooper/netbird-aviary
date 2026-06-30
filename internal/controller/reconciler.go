@@ -376,6 +376,33 @@ func (r *Reconciler) buildDesired(ctx context.Context, c docker.Container, sp la
 		svc.Targets[0].Enabled = false
 	}
 
+	// Resolve group names → IDs. NetBird's Service API rejects bare names;
+	// `admins` must be `<group-id>`. Aviary lets users write the friendly form,
+	// so we do the lookup here. Unknown group names are warned about and
+	// dropped — one typo shouldn't 403-lock an entire service.
+	if len(svc.AccessGroups) > 0 {
+		ids, missing, err := r.resolver.GroupIDs(ctx, svc.AccessGroups)
+		if err != nil {
+			return nil, fmt.Errorf("access_groups: %w", err)
+		}
+		if len(missing) > 0 {
+			r.log.Warn("unknown groups in netbird.access_groups — dropping; create them in the NetBird UI",
+				"service", svc.Name, "missing", missing, "resolved", ids)
+		}
+		svc.AccessGroups = ids
+	}
+	if svc.Auth != nil && svc.Auth.BearerAuth != nil && len(svc.Auth.BearerAuth.DistributionGroups) > 0 {
+		ids, missing, err := r.resolver.GroupIDs(ctx, svc.Auth.BearerAuth.DistributionGroups)
+		if err != nil {
+			return nil, fmt.Errorf("auth.sso_groups: %w", err)
+		}
+		if len(missing) > 0 {
+			r.log.Warn("unknown groups in netbird.auth.sso_groups — dropping",
+				"service", svc.Name, "missing", missing, "resolved", ids)
+		}
+		svc.Auth.BearerAuth.DistributionGroups = ids
+	}
+
 	return &desiredService{
 		service:              svc,
 		containerName:        c.Name,
