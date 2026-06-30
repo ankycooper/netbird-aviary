@@ -4,7 +4,7 @@
 [![Build & publish](https://github.com/ankycooper/netbird-aviary/actions/workflows/build.yml/badge.svg)](https://github.com/ankycooper/netbird-aviary/actions/workflows/build.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-Declarative **NetBird Services** from Docker labels. Watches the Docker socket and reconciles labeled containers into reverse-proxy Services on a self-hosted NetBird (v0.72.x) management server — optionally embedding a netbird agent and registering itself as a routing peer so your services don't need to publish host ports at all.
+Declarative **NetBird Services** from Docker labels. Watches the Docker socket and reconciles labeled containers into reverse-proxy Services on a self-hosted NetBird (v0.72.x+) management server — optionally embedding a netbird agent and registering itself as a routing peer so your services don't need to publish host ports at all.
 
 ```
         docker labels                 NetBird API

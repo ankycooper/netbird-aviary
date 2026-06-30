@@ -11,7 +11,7 @@ RUN go mod tidy && \
 # Pull a matching netbird release. Override NETBIRD_VERSION at build time if you
 # want to track a different management version (e.g. --build-arg NETBIRD_VERSION=0.73.0).
 FROM alpine:3.20 AS netbird
-ARG NETBIRD_VERSION=0.72.2
+ARG NETBIRD_VERSION=0.73.2
 ARG TARGETARCH
 ARG TARGETVARIANT
 RUN apk add --no-cache wget tar ca-certificates && \
