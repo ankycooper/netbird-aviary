@@ -74,7 +74,6 @@ services:
     container_name: multi
     ports:
       - "8080:80"
-      - "8443:443"
     labels:
       netbird.enable: "true"
 
@@ -82,12 +81,14 @@ services:
       netbird.services.web.port: "80"
       netbird.services.web.auth.password: "${MULTI_WEB_PASSWORD}"
 
+      # Both services target the same nginx (port 80) — they differ only in auth,
+      # demonstrating that you can put different auth gates in front of the same
+      # backend by giving each a unique NetBird Service. Swap to a TLS-speaking
+      # image and add `target.protocol: "https"` + `target.skip_tls_verify: "true"`
+      # if your backend actually serves HTTPS.
       netbird.services.api.domain: "api.example.com"
-      netbird.services.api.port: "443"
-      netbird.services.api.target.protocol: "https"
-      netbird.services.api.target.skip_tls_verify: "true"
+      netbird.services.api.port: "80"
       netbird.services.api.auth.sso: "true"
-      netbird.services.api.auth.sso_groups: "engineers"
       netbird.services.api.auth.header.X-API-Key: "${MULTI_API_HEADER_KEY}"
 
   # ---- example ephemeral service: NetBird service is DELETED when this container stops ----
